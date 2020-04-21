@@ -32,6 +32,39 @@ class LiarsDice {
   rollAllDice() {
     this.players.forEach(player => player.rollDice());
   }
+
+  evaluateRules(config) {
+    const {
+      ruleQuantity,
+      ruleFace,
+      assertRule,
+    } = config;
+    let currentQuantity = 0;
+
+    this.players.forEach(player => {
+      player.dice.forEach(die => {
+        if (die.value == ruleFace) {
+          currentQuantity += 1;
+        }
+      });
+    });
+
+    if (assertRule === 'exactly') {
+      return currentQuantity == ruleQuantity ?
+        `YES! There are EXACTLY ${ruleQuantity} ${ruleFace}'s` :
+        `NO! There are actually ${currentQuantity} ${ruleFace}'s`
+    } else {
+      if (currentQuantity > ruleQuantity) {
+        return `NOT BULLSHIT! There are more than ${ruleQuantity} ${ruleFace}'s`;
+      }
+      else if (currentQuantity == ruleQuantity) {
+        return `NOT BULLSHIT! There are exactly ${ruleQuantity} ${ruleFace}'s`;
+      }
+      else {
+        return `BULLSHIT! There are only ${currentQuantity} ${ruleFace}'s`;
+      }
+    }
+  }
 }
 
 export default LiarsDice;
