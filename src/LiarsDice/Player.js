@@ -9,6 +9,7 @@ class Player {
   init(props) {
     const { name } = props;
 
+    this.id = uuidv4();
     this.name = name;
     this.dice = this.initDice();
   }

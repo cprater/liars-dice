@@ -1,15 +1,18 @@
 import React from 'react';
 import './App.css';
-import serializeForm from './formHelpers';
 import LiarsDice from './LiarsDice/index';
+import PlayerBoard from './PlayerBoard';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
 
     this.addPlayer = this.addPlayer.bind(this);
+    this.startGame = this.startGame.bind(this);
     this.resetGame = this.resetGame.bind(this);
-    this.evaluateRules = this.evaluateRules.bind(this);
+    this.submitGuess = this.submitGuess.bind(this);
+    this.callBullshit = this.callBullshit.bind(this);
+    this.callExactly = this.callExactly.bind(this);
 
     this.refRulesForm = React.createRef();
 
@@ -25,6 +28,14 @@ class App extends React.Component {
     } = this.state;
 
     game.addPlayer();
+
+    this.setState({ game });
+  }
+
+  startGame() {
+    const { game } = this.state;
+
+    game.startGame();
 
     this.setState({ game });
   }
@@ -45,29 +56,39 @@ class App extends React.Component {
     this.setState({ game });
   }
 
-  evaluateRules(e) {
-    e.preventDefault();
+  submitGuess(formData) {
+    const { game } = this.state;
 
-    const {
-      game,
-    } = this.state;
+    game.submitPlayerTurn(formData);
 
-    const formData = serializeForm(this.refRulesForm.current);
-    const evaluationMessage = game.evaluateRules(formData);
+    this.setState({ game });
+  }
 
-    this.setState({
-      evaluationMessage,
-      game
-    });
+  callBullshit() {
+    const { game } = this.state;
+
+    game.callBullshit();
+
+    this.setState({ game });
+  }
+
+  callExactly() {
+    const { game } = this.state;
+
+    game.callExactly();
+
+    this.setState({ game });
   }
 
   render() {
     const {
-      evaluationMessage,
       game: {
         players,
         title,
-        gameFull,
+        gameStarted,
+        activePlayerId,
+        playerMessage,
+        evaluationMessage,
       },
     } = this.state;
 
@@ -75,46 +96,41 @@ class App extends React.Component {
       <div className="App">
         <header className="App-header">
           <h2>{title}</h2>
-          {!gameFull && (
+          {!gameStarted && (
             <button onClick={this.addPlayer}>
               Add Player
             </button>
           )}
-          <button onClick={() => this.rollAllDice()}>roll</button>
-          <button onClick={this.resetGame}> Reset game </button>
+          {!gameStarted && players.length > 1 && (
+            <button onClick={this.startGame}>
+              Start Game
+            </button>
+          )}
+          {gameStarted && (
+            <>
+              <button onClick={this.resetGame}>Reset game</button>
+              <button onClick={() => this.rollAllDice()}>roll</button>
 
-          <form onSubmit={this.evaluateRules} ref={this.refRulesForm}>
-            <label htmlFor="ruleQuantity"> How many? </label>
-            <input name="ruleQuantity" type="text" />
-            <label htmlFor="ruleFace"> Of what face? </label>
-            <input name="ruleFace" type="text" />
+              {evaluationMessage && (
+                <h3>{evaluationMessage}</h3>
+              )}
 
-            <fieldset>
-              <label htmlFor="assertExactly">
-                Exactly!
-                <input name="assertRule" type="radio" value="exactly" id="assertExactly" />
-              </label>
-              <label htmlFor="assertBullshit">
-                Bull Shit!
-                <input name="assertRule" type="radio" value="bullshit" id="assertBullshit" />
-              </label>
-            </fieldset>
-
-            <div>
-              <input type="submit" />
-            </div>
-          </form>
-
-          {evaluationMessage && (
-            <h3>{evaluationMessage}</h3>
+              {playerMessage && (
+                <h3>{playerMessage}</h3>
+              )}
+            </>
           )}
 
           <ul>
             {players.map(player => (
-              <li key={player.name}>
-                <h3>{player.name}</h3>
-                <h4>Dice:</h4>
-                {player.dice.map(die => <div key={die.uuid}>{die.value}</div>)}
+              <li key={player.id}>
+                <PlayerBoard
+                  activePlayer={activePlayerId === player.id}
+                  player={player}
+                  onRuleSubmit={this.submitGuess}
+                  onCallBullshit={this.callBullshit}
+                  onCallExactly={this.callExactly}
+                />
               </li>
             ))}
           </ul>
