@@ -64,18 +64,18 @@ class App extends React.Component {
     this.setState({ game });
   }
 
-  callBullshit() {
+  callBullshit(playerId) {
     const { game } = this.state;
 
-    game.callBullshit();
+    game.callBullshit(playerId);
 
     this.setState({ game });
   }
 
-  callExactly() {
+  callExactly(playerId) {
     const { game } = this.state;
 
-    game.callExactly();
+    game.callExactly(playerId);
 
     this.setState({ game });
   }

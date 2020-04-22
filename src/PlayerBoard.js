@@ -36,7 +36,11 @@ class PlayerBoard extends React.Component {
       <>
         <h3>{name}</h3>
         <h4>Dice:</h4>
-        {dice.map(die => <span style={{ border: '1px solid white', padding: '5px' }} key={die.uuid}>{die.value}</span>)}
+        {dice.map(die => (
+          <span style={{ border: '1px solid white', padding: '5px' }} key={die.uuid}>
+            {activePlayer ? die.value : 'X'}
+          </span>
+        ))}
         {activePlayer && (
           <>
             <form onSubmit={this.submitGuess} ref={this.refRulesForm}>
@@ -51,10 +55,10 @@ class PlayerBoard extends React.Component {
               </div>
             </form>
 
-            <button onClick={onCallBullshit}>
+            <button onClick={() => onCallBullshit(id)}>
               Call Bullshit!
             </button>
-            <button onClick={onCallExactly}>
+            <button onClick={() => onCallExactly(id)}>
               Call Exactly!
             </button>
           </>

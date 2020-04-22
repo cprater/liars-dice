@@ -17,14 +17,24 @@ class Player {
   initDice() {
     const dice = [];
 
-    for (let i = 0; i < 6; i++) {
-      dice.push({
-        uuid: uuidv4(),
-        value: this.randomRoll(),
-      });
+    for (let i = 0; i < 5; i++) {
+      dice.push(this.createDie());
     }
 
     return dice;
+  }
+
+  createDie() {
+    return {
+      uuid: uuidv4(),
+      value: this.randomRoll(),
+    };
+  }
+
+  removeDie() {
+    if (this.dice.length > 0) {
+      this.dice.pop();
+    }
   }
 
   randomRoll() {

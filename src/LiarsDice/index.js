@@ -1,4 +1,10 @@
 import Player from './Player';
+import RulesEvaluator from './RulesEvaluator';
+
+const RULES = {
+  BULLSHIT: 'bullshit',
+  EXACTLY: 'exactly',
+};
 
 class LiarsDice {
   constructor() {
@@ -21,6 +27,9 @@ class LiarsDice {
   startGame() {
     this.gameStarted = true;
     this.setActivePlayer(0);
+    this.RulesEvaluator = new RulesEvaluator({
+      players: this.players
+    });
   }
 
   addPlayer() {
@@ -55,6 +64,8 @@ class LiarsDice {
 
   rollAllDice() {
     this.players.forEach(player => player.rollDice());
+    this.evaluationMessage = undefined;
+    this.playerMessage = undefined;
   }
 
   submitPlayerTurn(config) {
@@ -73,17 +84,43 @@ class LiarsDice {
     this.nextPlayerTurn();
   }
 
-  callBullshit() {
-    this.evaluateRules('bullshit');
+  penalizePlayer() {
+    const playerIndex = this.activePlayerIndex === 0 ?
+      this.players.length - 1 : this.activePlayerIndex - 1;
+
+    const player = this.players[playerIndex];
+
+    player.removeDie();
+
+    this.players.forEach(player => {
+      if (player.dice.length === 0) {
+        this.endGame(player);
+      }
+    })
   }
 
-  callExactly() {
-    this.evaluateRules('exactly');
+  callBullshit(playerId) {
+    this.RulesEvaluator.evaluate({
+      rule: RulesEvaluator.RULES.BULLSHIT,
+      quantity: this.currentRuleQuantity,
+      face: this.currentRuleFace,
+      callerId: playerId,
+    });
+  }
+
+  callExactly(playerId) {
+    this.RulesEvaluator.evaluate({
+      rule: RulesEvaluator.RULES.EXACTLY,
+      quantity: this.currentRuleQuantity,
+      face: this.currentRuleFace,
+      callerId: playerId,
+    });
   }
 
   evaluateRules(assertRule) {
     let currentQuantity = 0;
     let evaluationMessage;
+    let penalizePlayer = false;
 
     this.players.forEach(player => {
       player.dice.forEach(die => {
@@ -94,9 +131,12 @@ class LiarsDice {
     });
 
     if (assertRule === 'exactly') {
-      evaluationMessage = currentQuantity === this.currentRuleQuantity ?
-        `YES! There are EXACTLY ${this.currentRuleQuantity} ${this.currentRuleFace}'s` :
-        `NO! There are actually ${currentQuantity} ${this.currentRuleFace}'s`
+      if (currentQuantity === this.currentRuleQuantity) {
+        evaluationMessage = `YES! There are EXACTLY ${this.currentRuleQuantity} ${this.currentRuleFace}'s`;
+      } else {
+        evaluationMessage = `NO! There are actually ${currentQuantity} ${this.currentRuleFace}'s`;
+        penalizePlayer = true;
+      }
     } else {
       if (currentQuantity > this.currentRuleQuantity) {
         evaluationMessage = `NOT BULLSHIT! There are more than ${this.currentRuleQuantity} ${this.currentRuleFace}'s`;
@@ -106,11 +146,22 @@ class LiarsDice {
       }
       else {
         evaluationMessage = `BULLSHIT! There are only ${currentQuantity} ${this.currentRuleFace}'s`;
+        penalizePlayer = true;
       }
+    }
+
+    if (penalizePlayer) {
+      this.penalizePlayer();
     }
 
     this.evaluationMessage = evaluationMessage;
     this.playerMessage = undefined;
+  }
+
+  endGame(player) {
+    // const player = this.players.find(p => p.id === this.activePlayerId);
+    this.playerMessage = `${player} LOSES!`
+    this.evaluationMessage = undefined;
   }
 }
 
